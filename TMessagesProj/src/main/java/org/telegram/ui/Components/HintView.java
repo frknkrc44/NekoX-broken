@@ -8,14 +8,12 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -24,8 +22,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.core.graphics.ColorUtils;
-
-import com.google.android.exoplayer2.DefaultLivePlaybackSpeedControl;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ImageReceiver;
@@ -115,7 +111,7 @@ public class HintView extends FrameLayout {
         }
 
         if (type == TYPE_NOSOUND) {
-            textView.setText(LocaleController.getString("AutoplayVideoInfo", R.string.AutoplayVideoInfo));
+            textView.setText(LocaleController.getString(R.string.AutoplayVideoInfo));
 
             imageView = new ImageView(context);
             imageView.setImageResource(R.drawable.tooltip_sound);
@@ -206,17 +202,17 @@ public class HintView extends FrameLayout {
             top += y;
             shownY = y;
             if (count == -1) {
-                textView.setText(LocaleController.getString("PollSelectOption", R.string.PollSelectOption));
+                textView.setText(LocaleController.getString(R.string.PollSelectOption));
             } else {
                 if (cell.getMessageObject().isQuiz()) {
                     if (count == 0) {
-                        textView.setText(LocaleController.getString("NoVotesQuiz", R.string.NoVotesQuiz));
+                        textView.setText(LocaleController.getString(R.string.NoVotesQuiz));
                     } else {
                         textView.setText(LocaleController.formatPluralString("Answer", count));
                     }
                 } else {
                     if (count == 0) {
-                        textView.setText(LocaleController.getString("NoVotes", R.string.NoVotes));
+                        textView.setText(LocaleController.getString(R.string.NoVotes));
                     } else {
                         textView.setText(LocaleController.formatPluralString("Vote", count));
                     }
@@ -226,7 +222,7 @@ public class HintView extends FrameLayout {
         } else {
             MessageObject messageObject = cell.getMessageObject();
             if (overrideText == null) {
-                textView.setText(LocaleController.getString("HidAccount", R.string.HidAccount));
+                textView.setText(LocaleController.getString(R.string.HidAccount));
             } else {
                 textView.setText(overrideText);
             }
@@ -564,6 +560,10 @@ public class HintView extends FrameLayout {
 
     public void setShowingDuration(long showingDuration) {
         this.showingDuration = showingDuration;
+    }
+
+    public long getShowingDuration() {
+        return showingDuration;
     }
 
     public void setBottomOffset(int offset) {

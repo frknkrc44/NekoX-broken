@@ -25,8 +25,6 @@ import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
-
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
@@ -126,10 +124,10 @@ public class ChatActivityEnterViewAnimatedIconView extends FrameLayout {
 
         switch (state) {
             case VOICE:
-                setContentDescription(LocaleController.getString("AccDescrVoiceMessage", R.string.AccDescrVoiceMessage));
+                setContentDescription(LocaleController.getString(R.string.AccDescrVoiceMessage));
                 break;
             case VIDEO:
-                setContentDescription(LocaleController.getString("AccDescrVideoMessage", R.string.AccDescrVideoMessage));
+                setContentDescription(LocaleController.getString(R.string.AccDescrVideoMessage));
                 break;
         }
     }

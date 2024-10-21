@@ -105,6 +105,7 @@ public class NotificationCenter {
     public static final int wasUnableToFindCurrentLocation = totalEvents++;
     public static final int reloadHints = totalEvents++;
     public static final int reloadInlineHints = totalEvents++;
+    public static final int reloadWebappsHints = totalEvents++;
     public static final int newDraftReceived = totalEvents++;
     public static final int recentDocumentsDidLoad = totalEvents++;
     public static final int needAddArchivedStickers = totalEvents++;
@@ -143,6 +144,8 @@ public class NotificationCenter {
     public static final int businessMessagesUpdated = totalEvents++;
     public static final int quickRepliesUpdated = totalEvents++;
     public static final int quickRepliesDeleted = totalEvents++;
+    public static final int bookmarkAdded = totalEvents++;
+    public static final int starReactionAnonymousUpdate = totalEvents++;
 
     public static final int businessLinksUpdated = totalEvents++;
     public static final int businessLinkCreated = totalEvents++;
@@ -252,12 +255,17 @@ public class NotificationCenter {
     public static final int premiumFloodWaitReceived = totalEvents++;
     public static final int availableEffectsUpdate = totalEvents++;
     public static final int starOptionsLoaded = totalEvents++;
+    public static final int starGiftOptionsLoaded = totalEvents++;
+    public static final int starGiveawayOptionsLoaded = totalEvents++;
     public static final int starBalanceUpdated = totalEvents++;
     public static final int starTransactionsLoaded = totalEvents++;
+    public static final int starSubscriptionsLoaded = totalEvents++;
     public static final int factCheckLoaded = totalEvents++;
     public static final int botStarsUpdated = totalEvents++;
     public static final int botStarsTransactionsLoaded = totalEvents++;
     public static final int channelStarsUpdated = totalEvents++;
+    public static final int webViewResolved = totalEvents++;
+    public static final int updateAllMessages = totalEvents++;
 
     //global
     public static final int pushMessagesUpdated = totalEvents++;
@@ -322,6 +330,7 @@ public class NotificationCenter {
     public static final int userEmojiStatusUpdated = totalEvents++;
     public static final int requestPermissions = totalEvents++;
     public static final int permissionsGranted = totalEvents++;
+    public static final int activityPermissionsGranted = totalEvents++;
     public static final int topicsDidLoaded = totalEvents++;
     public static final int chatSwithcedToForum = totalEvents++;
     public static final int didUpdateGlobalAutoDeleteTimer = totalEvents++;
@@ -338,6 +347,9 @@ public class NotificationCenter {
     public static final int onReceivedChannelDifference = totalEvents++;
     public static final int storiesReadUpdated = totalEvents++;
     public static final int nearEarEvent = totalEvents++;
+
+    public static final int outgoingMessageTranslated = totalEvents++;
+    public static final int forwardingMessageTranslated = totalEvents++;
 
     public static boolean alreadyLogged;
 

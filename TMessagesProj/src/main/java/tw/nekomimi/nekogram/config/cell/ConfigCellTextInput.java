@@ -23,15 +23,23 @@ public class ConfigCellTextInput extends AbstractConfigCell {
     private final ConfigItem bindConfig;
     private final String hint;
     private final String title;
-    private final Runnable onClickCustom;
+    private final Runnable callback, onClickCustom;
     private final Function<String, String> inputChecker;
 
+    public ConfigCellTextInput(String customTitle, ConfigItem bind, String hint) {
+        this(customTitle, bind, hint, null, null);
+    }
+
     public ConfigCellTextInput(String customTitle, ConfigItem bind, String hint, Runnable customOnClick) {
-        this(customTitle, bind, hint, customOnClick, null);
+        this(customTitle, bind, hint, customOnClick, null, null);
+    }
+
+    public ConfigCellTextInput(String customTitle, ConfigItem bind, String hint, Runnable customOnClick, Runnable callback) {
+        this(customTitle, bind, hint, customOnClick, callback, null);
     }
 
     // default: customTitle=null customOnClick=null
-    public ConfigCellTextInput(String customTitle, ConfigItem bind, String hint, Runnable customOnClick, Function<String, String> inputChecker) {
+    public ConfigCellTextInput(String customTitle, ConfigItem bind, String hint, Runnable customOnClick, Runnable callback, Function<String, String> inputChecker) {
         this.bindConfig = bind;
         if (hint == null) {
             this.hint = "";
@@ -39,10 +47,12 @@ public class ConfigCellTextInput extends AbstractConfigCell {
             this.hint = hint;
         }
         if (customTitle == null) {
-            title = LocaleController.getString(bindConfig.getKey());
+            int strId = bind.getId();
+            title = (strId != 0) ? LocaleController.getString(strId) : LocaleController.getString(bind.getKey());
         } else {
             title = customTitle;
         }
+        this.callback = callback;
         this.onClickCustom = customOnClick;
         this.inputChecker = inputChecker;
     }
@@ -86,10 +96,14 @@ public class ConfigCellTextInput extends AbstractConfigCell {
         editText.setText(bindConfig.String());
         linearLayout.addView(editText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(10), 0));
 
-        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (d, v) -> {
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), (d, v) -> {
             String newV = editText.getText().toString();
-            if (this.inputChecker != null)
+            if (this.inputChecker != null) {
                 newV = this.inputChecker.apply(newV);
+                if (callback != null) callback.run();
+            } else if (callback != null) {
+                callback.run();
+            }
             bindConfig.setConfigString(newV);
 
             //refresh

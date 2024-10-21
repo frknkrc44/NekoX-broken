@@ -85,12 +85,12 @@
     <string name="ConfirmAVMessage">Підтвердити надсилання відео/голосового повідомлення</string>
     <string name="AskBeforeCalling">Запитувати перед викликом</string>
     <string name="ConfirmCall">Підтвердити дзвінок</string>
-    <string name="CallTo">Зателефонувати **%1$s**\?</string>
+    <string name="CallTo">Зателефонувати **%1$s**?</string>
     <string name="DisableNumberRounding">Вимкнути округлення чисел</string>
     <string name="Categories">Категорії</string>
     <string name="OfficialChannel">Офіційний канал новин</string>
     <string name="About">Про застосунок</string>
-    <string name="IgnoreBlockedAbout">Ви більше не бачитимете повідомлень від заблокованих користувачів у групах.</string>
+    <string name="IgnoreBlockedAbout">ЦЕ НАСПРАВДІ НЕ ПРИХОВАЄТЬСЯ! Повідомлення все ще доступні для перегляду, але повідомлення буде перетворено на спойлер.</string>
     <string name="GooglePlay">Google Play</string>
     <string name="SourceCode">Вихідний код на GitHub</string>
     <string name="ResetStickerSize">Скинути розмір наліпок</string>

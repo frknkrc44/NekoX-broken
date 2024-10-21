@@ -36,12 +36,12 @@
     <string name="ConfirmAVMessage">Confirmer l\'envoi d\'un message vidéo/vocal</string>
     <string name="AskBeforeCalling">Demander avant d\'appeler</string>
     <string name="ConfirmCall">Confirmer l\'appel</string>
-    <string name="CallTo">Appeler **%1$s** \?</string>
+    <string name="CallTo">Appeler **%1$s** ?</string>
     <string name="DisableNumberRounding">Désactiver l\'arrondi des nombres</string>
     <string name="Categories">Catégories</string>
     <string name="OfficialChannel">Canal officiel</string>
     <string name="About">À propos</string>
-    <string name="IgnoreBlockedAbout">Vous ne verrez plus les messages de vos utilisateurs bloqués dans les groupes.</string>
+    <string name="IgnoreBlockedAbout">CE N\'EST PAS VRAIMENT CACHÉ ! Les messages sont toujours disponibles pour être consultés, mais les messages seront convertis en Spoiler.</string>
     <string name="GooglePlay">Google Play</string>
     <string name="SourceCode">Code source sur GitHub</string>
     <string name="BetaWarning">Il s\'agit d\'une fonctionnalité **bêta** implémentée par ** Telegram **.</string>

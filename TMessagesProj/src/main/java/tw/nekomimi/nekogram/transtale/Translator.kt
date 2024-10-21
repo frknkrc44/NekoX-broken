@@ -1,18 +1,27 @@
 package tw.nekomimi.nekogram.transtale
 
+import android.text.SpannableStringBuilder
+import android.util.Log
 import android.view.View
 import cn.hutool.core.util.ArrayUtil
 import cn.hutool.core.util.StrUtil
-import cn.hutool.http.HttpRequest
 import org.apache.commons.lang3.LocaleUtils
+import org.telegram.messenger.AndroidUtilities
 import org.telegram.messenger.LocaleController
+import org.telegram.messenger.MessageObject
+import org.telegram.messenger.NotificationCenter
 import org.telegram.messenger.R
-import org.telegram.messenger.SharedConfig
+import org.telegram.tgnet.ConnectionsManager
+import org.telegram.tgnet.TLObject
+import org.telegram.tgnet.TLRPC
+import org.telegram.ui.ChatActivity
+import org.telegram.ui.Components.Bulletin
+import org.telegram.ui.Components.TranslateAlert2
 import tw.nekomimi.nekogram.NekoConfig
-import tw.nekomimi.nekogram.ui.PopupBuilder
 import tw.nekomimi.nekogram.cc.CCConverter
 import tw.nekomimi.nekogram.cc.CCTarget
 import tw.nekomimi.nekogram.transtale.source.*
+import tw.nekomimi.nekogram.ui.PopupBuilder
 import tw.nekomimi.nekogram.utils.UIUtil
 import tw.nekomimi.nekogram.utils.receive
 import tw.nekomimi.nekogram.utils.receiveLazy
@@ -78,6 +87,7 @@ interface Translator {
         const val providerYouDao = 6
         const val providerDeepL = 7
         const val providerTelegram = 8
+        const val providerLingva = 9
 
         @Throws(Exception::class)
         suspend fun translate(to: Locale, query: String): String {
@@ -114,6 +124,7 @@ interface Translator {
                 providerYouDao -> YouDaoTranslator
                 providerDeepL -> DeepLTranslator
                 providerTelegram -> TelegramAPITranslator
+                providerLingva -> LingvaTranslator
                 else -> throw IllegalArgumentException()
             }
 
@@ -150,6 +161,8 @@ interface Translator {
                     .map { it.pluralLangCode }
                     .toSet()
                     .filter { !it.lowercase().contains("duang") }
+                    .filter { NekoConfig.preferredTranslateTargetLangList.isEmpty() ||
+                                NekoConfig.preferredTranslateTargetLangList.contains(it.lowercase()) }
                     .map { it.code2Locale })
                     .toTypedArray()
 
@@ -176,7 +189,7 @@ interface Translator {
 
                 localeNames[i] = if (!full && i == 0) {
 
-                    LocaleController.getString("Default", R.string.Default) + " ( " + locales[i].getDisplayName(currLocale) + " )"
+                    LocaleController.getString(R.string.Default) + " ( " + locales[i].getDisplayName(currLocale) + " )"
 
                 } else {
 
@@ -188,7 +201,7 @@ interface Translator {
 
             if (!full) {
 
-                localeNames[localeNames.size - 1] = LocaleController.getString("More", R.string.More)
+                localeNames[localeNames.size - 1] = LocaleController.getString(R.string.More)
 
             }
 
@@ -217,13 +230,13 @@ interface Translator {
             val builder = PopupBuilder(anchor)
 
             builder.setItems(arrayOf(
-                    if (!input) LocaleController.getString("CCNo", R.string.CCNo) else null,
-                    LocaleController.getString("CCSC", R.string.CCSC),
-                    LocaleController.getString("CCSP", R.string.CCSP),
-                    LocaleController.getString("CCTC", R.string.CCTC),
-                    LocaleController.getString("CCHK", R.string.CCHK),
-                    LocaleController.getString("CCTT", R.string.CCTT),
-                    LocaleController.getString("CCJP", R.string.CCJP)
+                    if (!input) LocaleController.getString(R.string.CCNo) else null,
+                    LocaleController.getString(R.string.CCSC),
+                    LocaleController.getString(R.string.CCSP),
+                    LocaleController.getString(R.string.CCTC),
+                    LocaleController.getString(R.string.CCHK),
+                    LocaleController.getString(R.string.CCTT),
+                    LocaleController.getString(R.string.CCJP)
             )) { index: Int, _ ->
                 callback(when (index) {
                     1 -> CCTarget.SC.name
@@ -275,6 +288,166 @@ interface Translator {
 
         }
 
+        var transReqId: Int? = null
+
+        @JvmStatic
+        fun translateMessageBeforeSent(currentAccount: Int, text: CharSequence?) {
+            translateMessageBeforeSent(currentAccount, text, "en")
+        }
+
+        @JvmStatic
+        fun translateMessageBeforeSent(currentAccount: Int, text: CharSequence?, targetLang: String) {
+            translateMessageBeforeSent(currentAccount, text, "en", true, null)
+        }
+
+        @JvmStatic
+        fun translateMessageBeforeSent(currentAccount: Int, text: CharSequence?, targetLang: String, isSelfOutgoingMessage: Boolean, maybeChatActivity: ChatActivity?) {
+            if (transReqId != null) {
+                ConnectionsManager.getInstance(currentAccount).cancelRequest(transReqId!!, true)
+                transReqId = null
+            }
+
+            var msgCount = 0
+            var localIsSelfOutgoing = isSelfOutgoingMessage
+            if (!isSelfOutgoingMessage) {
+                val chatActivity = maybeChatActivity!!
+                if (chatActivity.messagePreviewParams == null) {
+                    Log.d("030-tx", "not forwarding, fix state")
+                    localIsSelfOutgoing = true
+                } else {
+                    chatActivity.messagePreviewParamsForTranslate = chatActivity.messagePreviewParams
+                    msgCount = chatActivity.messagePreviewParams.forwardMessages.messages.size
+
+                    val target = ArrayList<MessageObject>()
+                    chatActivity.messagePreviewParams.forwardMessages.getSelectedMessages(target)
+                    target.forEach {
+                        var isMsgText = false
+                        var text = it.caption
+                        if (text == null || text.trim().isBlank()) {
+                            isMsgText = true
+                            text = it.messageText
+                        }
+
+                        if (text.isNullOrBlank()) return@forEach
+
+                        doTranslateWithOfficialApi(currentAccount, text, targetLang, { result ->
+                            // Log.d("030-tx", "fwd: $text -> $result")
+                            --msgCount
+                            if (isMsgText) it.messageText = result
+                            else it.caption = result
+                        }, {
+                            // Log.d("030-tx", "fwd: $text -> <FAILED>")
+                            --msgCount
+                        })
+                    }
+                }
+            }
+
+            val notiType = if (localIsSelfOutgoing) NotificationCenter.outgoingMessageTranslated
+                            else NotificationCenter.forwardingMessageTranslated
+
+            var result = "" as CharSequence
+
+            val t = Thread {
+                // wait until everything is translated
+                while (msgCount > 0) {
+                    // Log.d("030-tx", "wait...")
+                    Thread.sleep(100)
+                }
+                // Log.d("030-tx", "ok")
+                AndroidUtilities.runOnUIThread {
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(notiType, result)
+                }
+            }
+
+            if (text.isNullOrBlank()) {
+                t.start()
+                return
+            }
+
+            doTranslateWithOfficialApi(currentAccount, text, targetLang, {
+                result = it
+                t.start()
+            }, {
+                if (localIsSelfOutgoing) {
+                    Log.d("030-tx", "showing err toast")
+                    AndroidUtilities.runOnUIThread {
+                        NotificationCenter.getGlobalInstance().postNotificationName(
+                            NotificationCenter.showBulletin,
+                            Bulletin.TYPE_ERROR_SUBTITLE,
+                            LocaleController.getString(
+                                "TranslationFailedAlert2",
+                                R.string.TranslationFailedAlert2
+                            ), it.replaceFirst(Regex(" "), "")
+                        )
+                    }
+                }
+                result = it
+                t.start()
+            })
+
+        }
+
+        @JvmStatic
+        fun doTranslateWithOfficialApi(currentAccount: Int, text: CharSequence?, targetLang: String, onSuccess: ((CharSequence) -> Unit)?, onFailure: ((CharSequence) -> Unit)?) {
+            if (text.isNullOrBlank()) return
+            val req: TLRPC.TL_messages_translateText = TLRPC.TL_messages_translateText()
+            val textWithEntities: TLRPC.TL_textWithEntities = TLRPC.TL_textWithEntities()
+            textWithEntities.text = text.toString()
+            req.flags = req.flags or 2
+            req.text.add(textWithEntities)
+            var lang = "en" // 030: tmp
+            if (lang != null) {
+                lang = lang.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+            }
+            if ("nb" == lang) {
+                lang = "no"
+            }
+            req.to_lang = targetLang
+            transReqId = ConnectionsManager.getInstance(currentAccount).sendRequest(
+                req
+            ) { res: TLObject?, err: TLRPC.TL_error? ->
+                AndroidUtilities.runOnUIThread {
+                    transReqId = null
+                    if (res != null && (res is TLRPC.TL_messages_translateResult &&
+                                !(res as TLRPC.TL_messages_translateResult).result.isEmpty()) &&
+                        (res as TLRPC.TL_messages_translateResult).result.get(0) != null &&
+                        ((res as TLRPC.TL_messages_translateResult).result.get(0).text != null)
+                    ) {
+                        val processedText: TLRPC.TL_textWithEntities = TranslateAlert2.preprocess(
+                            textWithEntities, (res as TLRPC.TL_messages_translateResult).result.get(0))
+                        val translated: CharSequence? = SpannableStringBuilder.valueOf(processedText.text)
+                        MessageObject.addEntitiesToText(
+                            translated,
+                            processedText.entities,
+                            false,
+                            true,
+                            false,
+                            false
+                        )
+
+                        if (translated != null) {
+                            if (onSuccess != null) {
+                                onSuccess(translated)
+                            }
+                        } else {
+                            throw NullPointerException("null translated string")
+                        }
+                    } else {
+                        Log.d("030-tx", "response exists? ${res != null}")
+                        var errMsg = " NULL"
+                        if (err != null) {
+                            errMsg = " ${err.code} - ${err.text}"
+                            Log.e("030-tx", errMsg)
+                        }
+
+                        if (onFailure != null) {
+                            onFailure(errMsg)
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

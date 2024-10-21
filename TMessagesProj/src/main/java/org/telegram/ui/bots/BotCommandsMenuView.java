@@ -1,5 +1,7 @@
 package org.telegram.ui.bots;
 
+import static org.telegram.messenger.LocaleController.getString;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -31,6 +33,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.tgnet.tl.TL_bots;
 import org.telegram.ui.ActionBar.MenuDrawable;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.CubicBezierInterpolator;
@@ -69,7 +72,7 @@ public class BotCommandsMenuView extends View {
     public boolean expanded;
     float expandProgress;
 
-    private String menuText = LocaleController.getString(R.string.BotsMenuTitle);
+    private String menuText = getString(R.string.BotsMenuTitle);
     StaticLayout menuTextLayout;
     private float menuTextWidth;
     boolean isOpened;
@@ -91,7 +94,7 @@ public class BotCommandsMenuView extends View {
         backDrawable.setRoundCap();
         backgroundDrawable = Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(16), Color.TRANSPARENT, Theme.getColor(Theme.key_featuredStickers_addButtonPressed));
         backgroundDrawable.setCallback(this);
-        setContentDescription(LocaleController.getString("AccDescrBotMenu", R.string.AccDescrBotMenu));
+        setContentDescription(getString("AccDescrBotMenu", R.string.AccDescrBotMenu));
     }
 
     public void setDrawBackgroundDrawable(boolean drawBackgroundDrawable) {
@@ -235,7 +238,7 @@ public class BotCommandsMenuView extends View {
 
     public boolean setMenuText(String menuText) {
         if (menuText == null) {
-            menuText = LocaleController.getString(R.string.BotsMenuTitle);
+            menuText = getString(R.string.BotsMenuTitle);
         }
         boolean changed = this.menuText == null || !this.menuText.equals(menuText);
         this.menuText = menuText;
@@ -298,11 +301,11 @@ public class BotCommandsMenuView extends View {
             return newResult.size();
         }
 
-        public void setBotInfo(LongSparseArray<TLRPC.BotInfo> botInfo) {
+        public void setBotInfo(LongSparseArray<TL_bots.BotInfo> botInfo) {
             newResult.clear();
             newResultHelp.clear();
             for (int b = 0; b < botInfo.size(); b++) {
-                TLRPC.BotInfo info = botInfo.valueAt(b);
+                TL_bots.BotInfo info = botInfo.valueAt(b);
                 for (int a = 0; a < info.commands.size(); a++) {
                     TLRPC.TL_botCommand botCommand = info.commands.get(a);
                     if (botCommand != null && botCommand.command != null) {

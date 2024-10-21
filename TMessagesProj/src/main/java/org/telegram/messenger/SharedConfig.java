@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.webkit.WebView;
 
 import androidx.annotation.IntDef;
@@ -28,7 +29,6 @@ import androidx.annotation.RequiresApi;
 import androidx.core.content.pm.ShortcutManagerCompat;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dizitart.no2.objects.filters.ObjectFilters;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,8 +62,6 @@ import java.util.stream.Collectors;
 import cn.hutool.core.util.StrUtil;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.proxy.ProxyManager;
-import tw.nekomimi.nekogram.proxy.SubInfo;
-import tw.nekomimi.nekogram.proxy.SubManager;
 import tw.nekomimi.nekogram.proxy.tcp2ws.WsLoader;
 import tw.nekomimi.nekogram.proxynext.ProxyConfig;
 import tw.nekomimi.nekogram.proxynext.SingProxyManager;
@@ -107,9 +105,9 @@ public class SharedConfig {
 
                     readOnlyStorageDirAlertShowed = true;
                     AlertDialog.Builder dialog = new AlertDialog.Builder(fragment.getParentActivity());
-                    dialog.setTitle(LocaleController.getString("SdCardError", R.string.SdCardError));
-                    dialog.setSubtitle(LocaleController.getString("SdCardErrorDescription", R.string.SdCardErrorDescription));
-                    dialog.setPositiveButton(LocaleController.getString("DoNotUseSDCard", R.string.DoNotUseSDCard), (dialog1, which) -> {
+                    dialog.setTitle(LocaleController.getString(R.string.SdCardError));
+                    dialog.setSubtitle(LocaleController.getString(R.string.SdCardErrorDescription));
+                    dialog.setPositiveButton(LocaleController.getString(R.string.DoNotUseSDCard), (dialog1, which) -> {
 
                     });
                     Dialog dialogFinal = dialog.create();
@@ -297,12 +295,17 @@ public class SharedConfig {
 
     //    public static int saveToGalleryFlags;
     public static int mapPreviewType = 2;
+    public static int searchEngineType = 0;
+    public static String searchEngineCustomURLQuery, searchEngineCustomURLAutocomplete;
     public static boolean chatBubbles = Build.VERSION.SDK_INT >= 30;
     public static boolean raiseToSpeak = false;
     public static boolean raiseToListen = true;
     public static boolean nextMediaTap = true;
     public static boolean recordViaSco = false;
     public static boolean customTabs = true;
+    public static boolean inappBrowser = true;
+    public static boolean adaptableColorInBrowser = true;
+    public static boolean onlyLocalInstantView = false;
     public static boolean directShare = true;
     public static boolean inappCamera = true;
     public static boolean roundCamera16to9 = true;
@@ -458,11 +461,7 @@ public class SharedConfig {
             StringBuilder builder = new StringBuilder();
             builder.append("[ ");
             if (subId != 0L) {
-                try {
-                    builder.append(SubManager.getSubList().find(ObjectFilters.eq("id", subId)).firstOrDefault().displayName());
-                } catch (Exception e) {
-                    builder.append("Unknown");
-                }
+                builder.append("Unknown");
             } else {
                 if (StrUtil.isBlank(secret))
                     builder.append("Socks5");
@@ -678,6 +677,11 @@ public class SharedConfig {
     public static ProxyInfo currentProxy;
 
     public static void saveConfig() {
+        // ensure cache path in NekoConfig and storageCacheDir matches
+        if (storageCacheDir != null && !storageCacheDir.equals(NekoConfig.cachePath.String())) {
+            Log.d("030-path", String.format("cache overridden from '%s' to '%s'", storageCacheDir, NekoConfig.cachePath.String()));
+            storageCacheDir = NekoConfig.cachePath.String();
+        }
         synchronized (sync) {
             try {
                 SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("userconfing", Context.MODE_PRIVATE);
@@ -793,6 +797,11 @@ public class SharedConfig {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
             }
 
+            if (storageCacheDir != null && !storageCacheDir.equals(NekoConfig.cachePath.String())) {
+                Log.d("030-path", String.format("cache overridden from '%s' to '%s'", storageCacheDir, NekoConfig.cachePath.String()));
+                storageCacheDir = NekoConfig.cachePath.String();
+            }
+
             if (passcodeHash.length() > 0 && lastPauseTime == 0) {
                 lastPauseTime = (int) (SystemClock.elapsedRealtime() / 1000 - 60 * 10);
             }
@@ -844,11 +853,15 @@ public class SharedConfig {
             preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
             SaveToGallerySettingsHelper.load(preferences);
             mapPreviewType = preferences.getInt("mapPreviewType", 2);
+            searchEngineType = preferences.getInt("searchEngineType", 0);
             raiseToListen = preferences.getBoolean("raise_to_listen", true);
             raiseToSpeak = preferences.getBoolean("raise_to_speak", false);
             nextMediaTap = preferences.getBoolean("next_media_on_tap", true);
             recordViaSco = preferences.getBoolean("record_via_sco", false);
             customTabs = preferences.getBoolean("custom_tabs", true);
+            inappBrowser = preferences.getBoolean("inapp_browser", true);
+            adaptableColorInBrowser = preferences.getBoolean("adaptableBrowser", false);
+            onlyLocalInstantView = preferences.getBoolean("onlyLocalInstantView", BuildVars.DEBUG_PRIVATE_VERSION);
             directShare = preferences.getBoolean("direct_share", true);
             shuffleMusic = preferences.getBoolean("shuffleMusic", false);
             playOrderReversed = !shuffleMusic && preferences.getBoolean("playOrderReversed", false);
@@ -863,7 +876,7 @@ public class SharedConfig {
             allowBigEmoji = preferences.getBoolean("allowBigEmoji", true);
             streamMedia = preferences.getBoolean("streamMedia", true);
             saveStreamMedia = preferences.getBoolean("saveStreamMedia", true);
-            pauseMusicOnRecord = preferences.getBoolean("pauseMusicOnRecord", false);
+            pauseMusicOnRecord = preferences.getBoolean("pauseMusicOnRecord", true);
             pauseMusicOnMedia = preferences.getBoolean("pauseMusicOnMedia", false);
             forceDisableTabletMode = preferences.getBoolean("forceDisableTabletMode", false);
             streamAllVideo = preferences.getBoolean("streamAllVideo", BuildVars.DEBUG_VERSION);
@@ -1475,6 +1488,14 @@ public class SharedConfig {
         editor.apply();
     }
 
+    public static void setSearchEngineType(int value) {
+        searchEngineType = value;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("searchEngineType", searchEngineType);
+        editor.apply();
+    }
+
     public static void setNoSoundHintShowed(boolean value) {
         if (noSoundHintShowed == value) {
             return;
@@ -1514,11 +1535,35 @@ public class SharedConfig {
         return raiseToListen && (!speak || raiseToSpeak);
     }
 
-    public static void toggleCustomTabs() {
-        customTabs = !customTabs;
+    public static void toggleCustomTabs(boolean newValue) {
+        customTabs = newValue;
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("custom_tabs", customTabs);
+        editor.apply();
+    }
+
+    public static void toggleInappBrowser() {
+        inappBrowser = !inappBrowser;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("inapp_browser", inappBrowser);
+        editor.apply();
+    }
+
+    public static void toggleBrowserAdaptableColors() {
+        adaptableColorInBrowser = !adaptableColorInBrowser;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("adaptableBrowser", adaptableColorInBrowser);
+        editor.apply();
+    }
+
+    public static void toggleLocalInstantView() {
+        onlyLocalInstantView = !onlyLocalInstantView;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("onlyLocalInstantView", onlyLocalInstantView);
         editor.apply();
     }
 
@@ -2073,7 +2118,7 @@ public class SharedConfig {
             performanceClass = PERFORMANCE_CLASS_HIGH;
         }
         if (BuildVars.LOGS_ENABLED) {
-            FileLog.d("device performance info selected_class = " + performanceClass + " (cpu_count = " + cpuCount + ", freq = " + maxCpuFreq + ", memoryClass = " + memoryClass + ", android version " + androidVersion + ", manufacture " + Build.MANUFACTURER + ", screenRefreshRate=" + AndroidUtilities.screenRefreshRate + ")");
+            FileLog.d("device performance info selected_class = " + performanceClass + " (cpu_count = " + cpuCount + ", freq = " + maxCpuFreq + ", memoryClass = " + memoryClass + ", android version " + androidVersion + ", manufacture " + Build.MANUFACTURER + ", screenRefreshRate=" + AndroidUtilities.screenRefreshRate + ", screenMaxRefreshRate=" + AndroidUtilities.screenMaxRefreshRate + ")");
         }
 
         return performanceClass;

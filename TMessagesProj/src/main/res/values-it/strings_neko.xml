@@ -85,12 +85,12 @@
     <string name="ConfirmAVMessage">Conferma l\'invio di video/audio messaggio</string>
     <string name="AskBeforeCalling">Chiedi prima di chiamare</string>
     <string name="ConfirmCall">Conferma chiamata</string>
-    <string name="CallTo">Chiamare **%1$s**\?</string>
+    <string name="CallTo">Chiamare **%1$s**?</string>
     <string name="DisableNumberRounding">Disabilita arrotondamento numeri</string>
     <string name="Categories">Categorie</string>
     <string name="OfficialChannel">Canale ufficiale</string>
     <string name="About">Informazioni</string>
-    <string name="IgnoreBlockedAbout">Non vedrai più i messaggi nei gruppi degli utenti bloccati.</string>
+    <string name="IgnoreBlockedAbout">NON È VERAMENTE HIDE! I messaggi sono ancora disponibili per la visualizzazione, ma verranno convertiti in Spoiler.</string>
     <string name="GooglePlay">Google Play</string>
     <string name="SourceCode">Codice sorgente su GitHub</string>
     <string name="ResetStickerSize">Ripristina dimensione sticker</string>
@@ -126,7 +126,6 @@
     <string name="enablePublicProxy">Proxy Pubblico NekoX</string>
     <string name="hideSendAsChannel">Nascondi invia come canale</string>
     <string name="showSpoilersDirectly">Visualizza direttamente i messaggi Spoiler</string>
-    <string name="disableDoubleTabReactions">Disabilita le reazioni al doppio tocco</string>
     <string name="SaveToDownloadCount_zero">Salvataggio di %1$d file nei download</string>
     <string name="SaveToDownloadCount_one">Salvataggio di %1$d file nei download</string>
     <string name="SaveToDownloadCount_two">Salvataggio di %1$d file nei download</string>

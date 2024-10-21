@@ -55,12 +55,12 @@ import tw.nekomimi.nekogram.NekoConfig;
 
 public class Emoji {
 
-    private static HashMap<CharSequence, DrawableInfo> rects = new HashMap<>();
+    private final static HashMap<CharSequence, DrawableInfo> rects = new HashMap<>();
     public static int drawImgSize;
     public static int bigImgSize;
     private static boolean inited = false;
     public static Paint placeholderPaint;
-    private static int[] emojiCounts = new int[]{
+    private final static int[] emojiCounts = new int[]{
         EmojiData.data[0].length,
         EmojiData.data[1].length,
         EmojiData.data[2].length,
@@ -73,15 +73,15 @@ public class Emoji {
     private static Bitmap[][] emojiBmp = new Bitmap[8][];
     private static boolean[][] loadingEmoji = new boolean[8][];
 
-    public static HashMap<String, Integer> emojiUseHistory = new HashMap<>();
-    public static ArrayList<String> recentEmoji = new ArrayList<>();
-    public static HashMap<String, String> emojiColor = new HashMap<>();
+    public final static HashMap<String, Integer> emojiUseHistory = new HashMap<>();
+    public final static ArrayList<String> recentEmoji = new ArrayList<>();
+    public final static HashMap<String, String> emojiColor = new HashMap<>();
     private static boolean recentEmojiLoaded;
-    public static Runnable invalidateUiRunnable = () -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.emojiLoaded);
+    public final static Runnable invalidateUiRunnable = () -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.emojiLoaded);
     public static float emojiDrawingYOffset;
     public static boolean emojiDrawingUseAlpha = true;
 
-    private static String[] DEFAULT_RECENT = new String[]{
+    private final static String[] DEFAULT_RECENT = new String[]{
         "\uD83D\uDE02", "\uD83D\uDE18", "\u2764", "\uD83D\uDE0D", "\uD83D\uDE0A", "\uD83D\uDE01",
         "\uD83D\uDC4D", "\u263A", "\uD83D\uDE14", "\uD83D\uDE04", "\uD83D\uDE2D", "\uD83D\uDC8B",
         "\uD83D\uDE12", "\uD83D\uDE33", "\uD83D\uDE1C", "\uD83D\uDE48", "\uD83D\uDE09", "\uD83D\uDE03",
@@ -90,7 +90,7 @@ public class Emoji {
         "\uD83D\uDE06", "\uD83D\uDC4C", "\uD83D\uDE10", "\uD83D\uDE15"
     };
 
-    private final static int MAX_RECENT_EMOJI_COUNT = 48;
+    public static int MAX_RECENT_EMOJI_COUNT = NekoConfig.maxRecentEmojiCount.Int();
 
     static {
         drawImgSize = AndroidUtilities.dp(20);
@@ -281,7 +281,7 @@ public class Emoji {
     }
 
     public static abstract class EmojiDrawable extends Drawable {
-        boolean fullSize = false;
+        public boolean fullSize = false;
         int placeholderColor = 0x10000000;
 
         public boolean isLoaded() {
@@ -292,7 +292,7 @@ public class Emoji {
 
     public static class SimpleEmojiDrawable extends EmojiDrawable {
         private DrawableInfo info;
-        private boolean fullSize = false;
+        public boolean fullSize = false;
         private static final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
         private static final Rect rect = new Rect();
         private static final TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
